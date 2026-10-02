@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop Path Node Editor — Royal Gems</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Fira+Code:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0b0714;
+            color: #e2e8f0;
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Left Panel: Map Canvas */
+        .map-section {
+            flex: 1;
+            background: #06030a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            position: relative;
+            overflow: auto;
+        }
+
+        .map-frame {
+            position: relative;
+            height: calc(100vh - 32px);
+            aspect-ratio: 1080 / 1920;
+            border: 3px solid rgba(255, 215, 0, 0.6);
+            border-radius: 20px;
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .path-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .nodes-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+        }
+
+        /* Draggable Node Circle */
+        .drag-node {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #ffe066, #ff9900);
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 215, 0, 0.7);
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #200a00;
+            font-weight: 900;
+            font-size: 0.75rem;
+            cursor: grab;
+            touch-action: none;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .drag-node:hover {
+            transform: translate(-50%, -50%) scale(1.15);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9), 0 0 18px #ffd700;
+            z-index: 100;
+        }
+
+        .drag-node.dragging {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.25);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95), 0 0 25px #ffd700;
+            z-index: 999;
+        }
+
+        .drag-node.selected {
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        /* Right Panel: Controls & Code Output */
+        .editor-sidebar {
+            width: 440px;
+            background: #140d21;
+            border-left: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+        }
+
+        select,
+        input,
+        button,
+        textarea {
+            font-family: inherit;
+            border-radius: 8px;
+            border: 1.5px solid rgba(255, 215, 0, 0.3);
+            background: #201533;
+            color: white;
+            padding: 10px 14px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus,
+        textarea:focus {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 900;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.btn-add {
+            background: linear-gradient(135deg, #10b981, #047857);
+        }
+
+        button.btn-del {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+        button.btn-import {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        }
+
+        button.btn-copy {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        textarea {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.76rem;
+            height: 220px;
+            resize: none;
+            white-space: pre;
+        }
+
+        .import-box {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            height: 90px;
+            resize: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 900;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Left View: Interactive Map -->
+    <div class="map-section">
+        <div id="map-frame" class="map-frame">
+            <svg id="path-svg" class="path-svg"></svg>
+            <div id="nodes-layer" class="nodes-layer"></div>
+        </div>
+    </div>
+
+    <!-- Right View: Editor Sidebar -->
+    <div class="editor-sidebar">
+        <h1>🎯 Drag & Drop Node Editor</h1>
+        <p style="font-size:0.8rem; color:#94a3b8;">Drag nodes on the map to adjust level coordinates in real time.</p>
+
+        <!-- World Image Selection -->
+        <div class="control-group">
+            <label for="world-select">World Map Background</label>
+            <select id="world-select">
+                <option value="public/icons/sections/World-1.JPG" data-idx="1">World 1 — Royal Garden</option>
+                <option value="public/icons/sections/World-2.JPG" data-idx="2">World 2 — Crystal Caves</option>
+                <option value="public/icons/sections/World-3.JPG" data-idx="3">World 3 — Fire Peaks</option>
+                <option value="public/icons/sections/World-4.JPG" data-idx="4">World 4 — Ocean Depths</option>
+                <option value="public/icons/sections/World-5.JPG" data-idx="5">World 5 — Crown Palace</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="file-input">Or Choose Image File from Device</label>
+            <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-grid">
+            <button id="btn-add" class="btn-add">➕ Add Node</button>
+            <button id="btn-del" class="btn-del">❌ Delete Selected</button>
+        </div>
+
+        <!-- Paste TS Code Import -->
+        <div class="control-group">
+            <label for="import-input">Import TS Code Array</label>
+            <textarea id="import-input" class="import-box"
+                placeholder="Paste existing [{ x: 50, y: 90 }, ...] array here..."></textarea>
+            <button id="btn-import" class="btn-import">📥 Load Pasted Array</button>
+        </div>
+
+        <!-- Output Code -->
+        <div class="control-group">
+            <label for="code-output">Live TypeScript Code Output</label>
+            <textarea id="code-output" readonly></textarea>
+        </div>
+
+        <button id="btn-copy" class="btn-copy">📋 Copy Updated TS Array</button>
+    </div>
+
+    <div id="toast" class="toast">Copied to Clipboard!</div>
+
+    <script>
+        // Initial Coordinates per world
+        const PRESETS = {
+            1: [
+                { x: 50, y: 90 }, { x: 62, y: 82 }, { x: 48, y: 76 }, { x: 37, y: 70 },
+                { x: 62, y: 64 }, { x: 64, y: 55 }, { x: 33, y: 47 }, { x: 44, y: 43 },
+                { x: 58, y: 37 }, { x: 67, y: 31 }, { x: 69, y: 24 }, { x: 58, y: 18 },
+                { x: 45, y: 13 }, { x: 34, y: 9 }, { x: 32, y: 17 }, { x: 42, y: 13 },
+                { x: 52, y: 10 }, { x: 48, y: 7 }, { x: 50, y: 4 }, { x: 50, y: 2 }
+            ],
+            2: Array.from({ length: 20 }, (_, i) => ({ x: 50, y: Math.round(90 - i * 4.4) })),
+            3: Array.from({ length: 20 }, (_, i) => ({ x: 50, y: Math.round(90 - i * 4.4) })),
+            4: Array.from({ length: 20 }, (_, i) => ({ x: 50, y: Math.round(90 - i * 4.4) })),
+            5: Array.from({ length: 20 }, (_, i) => ({ x: 50, y: Math.round(90 - i * 4.4) })),
+        };
+
+        const worldSelect = document.getElementById('world-select');
+        const fileInput = document.getElementById('file-input');
+        const mapFrame = document.getElementById('map-frame');
+        const nodesLayer = document.getElementById('nodes-layer');
+        const pathSvg = document.getElementById('path-svg');
+        const codeOutput = document.getElementById('code-output');
+        const importInput = document.getElementById('import-input');
+
+        const btnAdd = document.getElementById('btn-add');
+        const btnDel = document.getElementById('btn-del');
+        const btnImport = document.getElementById('btn-import');
+        const btnCopy = document.getElementById('btn-copy');
+        const toastEl = document.getElementById('toast');
+
+        let currentWorldIdx = 1;
+        let nodes = [...PRESETS[1]];
+        let selectedNodeIdx = -1;
+
+        function updateWorldBg() {
+            const val = worldSelect.value;
+            const option = worldSelect.options[worldSelect.selectedIndex];
+            currentWorldIdx = parseInt(option.getAttribute('data-idx') || '1', 10);
+
+            // Try public/ relative, then / absolute, then relative icons/
+            const img = new Image();
+            img.onload = () => {
+                mapFrame.style.backgroundImage = `url('${val}')`;
+            };
+            img.onerror = () => {
+                const alt1 = val.replace(/^public\//, '/');
+                const img2 = new Image();
+                img2.onload = () => { mapFrame.style.backgroundImage = `url('${alt1}')`; };
+                img2.onerror = () => {
+                    const alt2 = val.replace(/^public\//, '');
+                    mapFrame.style.backgroundImage = `url('${alt2}')`;
+                };
+                img2.src = alt1;
+            };
+            img.src = val;
+        }
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    mapFrame.style.backgroundImage = `url('${evt.target.result}')`;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        worldSelect.onchange = () => {
+            updateWorldBg();
+            nodes = [...(PRESETS[currentWorldIdx] || PRESETS[1])];
+            selectedNodeIdx = -1;
+            render();
+        };
+
+        function render() {
+            // 1. Render Nodes
+            nodesLayer.innerHTML = '';
+            nodes.forEach((node, idx) => {
+                const el = document.createElement('div');
+                el.className = `drag-node ${idx === selectedNodeIdx ? 'selected' : ''}`;
+                el.style.left = `${node.x}%`;
+                el.style.top = `${node.y}%`;
+                el.textContent = idx + 1;
+
+                // Selection & Drag handling
+                setupDrag(el, idx);
+
+                nodesLayer.appendChild(el);
+            });
+
+            // 2. Render Curved SVG Path
+            renderPath();
+
+            // 3. Render Code Block
+            renderCode();
+        }
+
+        function setupDrag(el, index) {
+            let isDragging = false;
+
+            const onPointerDown = (e) => {
+                e.stopPropagation();
+                selectedNodeIdx = index;
+                isDragging = true;
+                el.classList.add('dragging');
+                document.querySelectorAll('.drag-node').forEach((n, i) => {
+                    n.classList.toggle('selected', i === index);
+                });
+
+                const onPointerMove = (e) => {
+                    if (!isDragging) return;
+                    const rect = mapFrame.getBoundingClientRect();
+                    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+                    let x = Math.round(((clientX - rect.left) / rect.width) * 100);
+                    let y = Math.round(((clientY - rect.top) / rect.height) * 100);
+
+                    x = Math.max(0, Math.min(100, x));
+                    y = Math.max(0, Math.min(100, y));
+
+                    nodes[index] = { x, y };
+                    el.style.left = `${x}%`;
+                    el.style.top = `${y}%`;
+
+                    renderPath();
+                    renderCode();
+                };
+
+                const onPointerUp = () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        el.classList.remove('dragging');
+                        window.removeEventListener('mousemove', onPointerMove);
+                        window.removeEventListener('mouseup', onPointerUp);
+                        window.removeEventListener('touchmove', onPointerMove);
+                        window.removeEventListener('touchend', onPointerUp);
+                    }
+                };
+
+                window.addEventListener('mousemove', onPointerMove);
+                window.addEventListener('mouseup', onPointerUp);
+                window.addEventListener('touchmove', onPointerMove, { passive: false });
+                window.addEventListener('touchend', onPointerUp);
+            };
+
+            el.addEventListener('mousedown', onPointerDown);
+            el.addEventListener('touchstart', onPointerDown, { passive: false });
+        }
+
+        function renderPath() {
+            const rect = mapFrame.getBoundingClientRect();
+            if (nodes.length < 2) {
+                pathSvg.innerHTML = '';
+                return;
+            }
+
+            const pts = nodes.map(n => ({
+                px: (n.x / 100) * rect.width,
+                py: (n.y / 100) * rect.height
+            }));
+
+            let d = `M ${pts[0].px} ${pts[0].py}`;
+            for (let i = 1; i < pts.length; i++) {
+                const prev = pts[i - 1];
+                const curr = pts[i];
+                const midY = (prev.py + curr.py) / 2;
+                d += ` C ${prev.px} ${midY}, ${curr.px} ${midY}, ${curr.px} ${curr.y}`;
+            }
+
+            pathSvg.innerHTML = `<path d="${d}" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="7 4" stroke-linecap="round"/>`;
+        }
+
+        function renderCode() {
+            const startLevel = (currentWorldIdx - 1) * 20 + 1;
+            let code = `const WORLD${currentWorldIdx}_NODE_COORDS: { x: number; y: number }[] = [\n`;
+            nodes.forEach((n, idx) => {
+                code += `    { x: ${n.x}, y: ${n.y} }, // Level ${startLevel + idx}\n`;
+            });
+            code += `];`;
+            codeOutput.value = code;
+        }
+
+        // Button Listeners
+        btnAdd.onclick = () => {
+            nodes.push({ x: 50, y: 50 });
+            selectedNodeIdx = nodes.length - 1;
+            render();
+        };
+
+        btnDel.onclick = () => {
+            if (selectedNodeIdx >= 0 && selectedNodeIdx < nodes.length) {
+                nodes.splice(selectedNodeIdx, 1);
+                selectedNodeIdx = -1;
+                render();
+            } else {
+                alert('Click a node on the map first to select it for deletion.');
+            }
+        };
+
+        btnImport.onclick = () => {
+            const txt = importInput.value;
+            const matches = [...txt.matchAll(/\{\s*x:\s*(\d+),\s*y:\s*(\d+)\s*\}/g)];
+            if (matches.length > 0) {
+                nodes = matches.map(m => ({ x: parseInt(m[1], 10), y: parseInt(m[2], 10) }));
+                selectedNodeIdx = -1;
+                render();
+            } else {
+                alert('Could not parse valid { x, y } coordinates from the text.');
+            }
+        };
+
+        btnCopy.onclick = () => {
+            navigator.clipboard.writeText(codeOutput.value).then(() => {
+                toastEl.classList.add('show');
+                setTimeout(() => toastEl.classList.remove('show'), 2000);
+            });
+        };
+
+        // Init
+        updateWorldBg();
+        render();
+    </script>
+</body>
+
+</html>

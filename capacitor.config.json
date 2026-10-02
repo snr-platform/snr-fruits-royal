@@ -1,0 +1,13 @@
+{
+    "appId": "com.puzzlegame.master",
+    "appName": "SNR Royal Fruits",
+    "webDir": "dist",
+    "server": {
+        "androidScheme": "https"
+    },
+    "plugins": {
+        "AdMob": {
+            "appId": "ca-app-pub-9010633656184987~4625986112"
+        }
+    }
+}

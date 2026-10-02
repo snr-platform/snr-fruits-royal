@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SNR Royal Fruits</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9010633656184987"
+         crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Cinzel:wght@700;900&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="/icons/logo-favicon/favicon.ico">
+  <link rel="apple-touch-icon" href="/icons/logo-favicon/logo.PNG">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0118;
+      font-family: 'Nunito', sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #game-root {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ===== SCREENS ===== */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .hidden,
+    .screen.hidden,
+    #start-screen.hidden {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
+
+    /* ===== START SCREEN ===== */
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      background-image: url('/icons/background/main-page.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 90px;
+      z-index: 500;
+    }
+
+    .start-screen-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .start-title-box {
+      background: rgba(10, 1, 24, 0.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 16px 36px;
+      border-radius: 24px;
+      border: 2px solid rgba(255, 215, 0, 0.6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+
+    .start-title {
+      font-family: 'Cinzel', serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 215, 0, 0.6);
+      letter-spacing: 2px;
+    }
+
+    .start-subtitle {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: 4px;
+      font-weight: 800;
+    }
+
+    .start-btn-play {
+      padding: 16px 52px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #1a0826;
+      background: linear-gradient(135deg, #ffe066, #ff9900);
+      border: 3px solid #ffffff;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(255, 153, 0, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.8);
+      animation: pulseStartBtn 1.6s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .start-btn-play:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes pulseStartBtn {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 8px 25px rgba(255, 153, 0, 0.8);
+      }
+
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 12px 35px rgba(255, 215, 0, 0.95);
+      }
+    }
+
+    /* ===== TIME WARNING VIGNETTE ===== */
+    @keyframes vignettePulse {
+
+      0%,
+      100% {
+        box-shadow: inset 0 0 25px rgba(239, 68, 68, 0.3);
+      }
+
+      50% {
+        box-shadow: inset 0 0 65px rgba(239, 68, 68, 0.85);
+      }
+    }
+
+    @keyframes vignetteCriticalPulse {
+
+      0%,
+      100% {
+        box-shadow: inset 0 0 35px rgba(239, 68, 68, 0.5);
+      }
+
+      50% {
+        box-shadow: inset 0 0 95px rgba(239, 68, 68, 1);
+      }
+    }
+
+    .time-warning-pulse {
+      animation: vignettePulse 1s ease-in-out infinite;
+    }
+
+    .time-critical-pulse {
+      animation: vignetteCriticalPulse 0.5s ease-in-out infinite;
+    }
+
+    /* ===== TUTORIAL SYSTEM ===== */
+    .tutorial-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 1, 15, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+
+    .tutorial-card {
+      background: linear-gradient(145deg, rgba(25, 10, 48, 0.97), rgba(12, 4, 28, 0.97));
+      border: 3px solid #ffd700;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 215, 0, 0.4);
+      padding: 24px 28px;
+      border-radius: 28px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 92%;
+      max-width: 340px;
+    }
+
+    .tutorial-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #ffd700;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 215, 0, 0.5);
+    }
+
+    /* ── Demo Scene: 3×2 grid ── */
+    .tut-scene {
+      position: relative;
+      width: 200px;
+      height: 130px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .tut-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 6px;
+      padding: 8px;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .tut-cell {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tut-cell img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    /* Destination cell glows gold when the travelling gem arrives */
+    .tut-dest {
+      animation: destGlow 3.2s ease-in-out infinite;
+    }
+
+    @keyframes destGlow {
+
+      0%,
+      30% {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: none;
+      }
+
+      45%,
+      68% {
+        border-color: #ffd700;
+        box-shadow: 0 0 10px #ffd700;
+      }
+
+      85%,
+      100% {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: none;
+      }
+    }
+
+    /* The single gem that visually moves upward */
+    .tut-moving-gem {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      /* row2-col2 center: left=8+61+30=99→ center at 99px; top=8+57+26=91→ center at 91px */
+      left: 81px;
+      top: 74px;
+      z-index: 5;
+      transform-origin: center center;
+      animation: gemDragUp 3.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 7px rgba(255, 215, 0, 1));
+    }
+
+    /* Cell height ≈ (130-8-8-6)/2 = 54px → row gap center diff ≈ 60px */
+    @keyframes gemDragUp {
+
+      0%,
+      14% {
+        transform: translateY(0);
+        filter: drop-shadow(0 0 7px rgba(255, 215, 0, 1));
+      }
+
+      32%,
+      62% {
+        transform: translateY(-60px);
+        filter: drop-shadow(0 0 14px #ffd700) brightness(1.4);
+      }
+
+      78%,
+      100% {
+        transform: translateY(0);
+        filter: drop-shadow(0 0 7px rgba(255, 215, 0, 1));
+      }
+    }
+
+    /* Pointing hand follows the gem */
+    .tut-hand {
+      position: absolute;
+      left: 106px;
+      top: 74px;
+      font-size: 1.7rem;
+      z-index: 6;
+      pointer-events: none;
+      animation: handFollow 3.2s ease-in-out infinite;
+    }
+
+    @keyframes handFollow {
+
+      0%,
+      14% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      32%,
+      62% {
+        transform: translateY(-60px);
+        opacity: 1;
+      }
+
+      70%,
+      78% {
+        transform: translateY(-60px);
+        opacity: 0.3;
+      }
+
+      88%,
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* MATCH 3 badge */
+    .tut-match-badge {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      font-size: 0.7rem;
+      font-weight: 900;
+      color: #ffd700;
+      background: rgba(10, 1, 24, 0.92);
+      padding: 3px 12px;
+      border-radius: 10px;
+      border: 1.5px solid #ffd700;
+      white-space: nowrap;
+      opacity: 0;
+      animation: badgeShow 3.2s ease-in-out infinite;
+    }
+
+    @keyframes badgeShow {
+
+      0%,
+      60% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.8);
+      }
+
+      70%,
+      80% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.08);
+      }
+
+      90%,
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.8);
+      }
+    }
+
+    .tutorial-text {
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .btn-skip-tutorial {
+      background: linear-gradient(135deg, #ffe066, #ff9900);
+      border: 2px solid #ffffff;
+      color: #1a0826;
+      padding: 11px 30px;
+      border-radius: 22px;
+      font-weight: 900;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255, 153, 0, 0.65);
+      transition: transform 0.15s;
+    }
+
+    .btn-skip-tutorial:active {
+      transform: scale(0.95);
+    }
+
+
+
+
+    /* ===== MENU SCREEN — Stone Path Map ===== */
+    #menu-screen {
+      background:
+        radial-gradient(ellipse at 50% 0%, #1a3a0f 0%, #0d2008 40%, #060d04 100%);
+      overflow: hidden;
+    }
+
+    #menu-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(34, 120, 20, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(180, 140, 0, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 60% 60%, rgba(20, 60, 10, 0.2) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .menu-header {
+      position: relative;
+      text-align: center;
+      padding: 28px 20px 14px;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+
+    .menu-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 6vw, 2.8rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 18px rgba(255, 180, 0, 0.55));
+      letter-spacing: 2px;
+    }
+
+    .menu-subtitle {
+      color: #9edc7a;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-top: 3px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .menu-gems-preview {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 10px 0 0;
+    }
+
+    .menu-gems-preview img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 8px rgba(255, 180, 0, 0.4));
+      animation: bobble 2s ease-in-out infinite;
+    }
+
+    .menu-gems-preview img:nth-child(2) {
+      animation-delay: 0.3s;
+    }
+
+    .menu-gems-preview img:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+
+    .menu-gems-preview img:nth-child(4) {
+      animation-delay: 0.9s;
+    }
+
+    .menu-gems-preview img:nth-child(5) {
+      animation-delay: 1.2s;
+    }
+
+    /* ── World Page 5-Screen System ── */
+    .world-nav-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .world-dots {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .world-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1.5px solid rgba(255, 215, 0, 0.4);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .world-dot.active {
+      background: #ffd700;
+      box-shadow: 0 0 10px #ffd700;
+      transform: scale(1.3);
+    }
+
+    .world-label {
+      color: #ffd700;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 6px 20px;
+      border: 1.5px solid rgba(255, 215, 0, 0.4);
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.45);
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+    }
+
+    .world-view-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      max-width: 480px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      padding: 8px 12px 24px;
+      z-index: 1;
+    }
+
+    .world-view-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .world-card {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1080 / 1920;
+      border-radius: 24px;
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 2.5px solid rgba(255, 215, 0, 0.5);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      transition: background-image 0.4s ease-in-out;
+    }
+
+    .world-svg-path {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .world-nodes-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+
+    .world-nav-btn {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: 2px solid #ffd700;
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
+      color: #1a0130;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 180, 0, 0.6), 0 0 0 3px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .world-nav-btn:active {
+      transform: translateX(-50%) scale(0.94);
+    }
+
+    .world-nav-btn.nav-top {
+      top: 3.5%;
+    }
+
+    .world-nav-btn.nav-bottom {
+      bottom: 3.5%;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(168, 85, 247, 0.95));
+      border-color: #c084fc;
+      color: white;
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.6), 0 0 0 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .world-nav-btn.hidden {
+      display: none !important;
+    }
+
+    /* this is the circle shpae */
+    .map-node-btn {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: none;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 0.6rem;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .map-node-btn::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #8a7550, #5a4a30);
+      z-index: -1;
+    }
+
+    .map-node-btn.unlocked {
+      background: radial-gradient(circle at 35% 30%, #b8a870, #7a6040);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 2.5px #c8b880;
+    }
+
+    .map-node-btn.unlocked:active {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    .map-node-btn.current {
+      background: radial-gradient(circle at 35% 30%, #ffe066, #ff9900);
+      box-shadow: 0 4px 18px rgba(255, 160, 0, 0.85), inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 0 0 3px #ffd700;
+      animation: pulseBtn 1.4s ease-in-out infinite;
+      z-index: 4;
+    }
+
+    .map-node-btn.current .node-num {
+      color: #3a1a00;
+    }
+
+    .map-node-btn.locked {
+      background: radial-gradient(circle at 35% 30%, #3a3040, #1f1825);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 0 2px #2a2030;
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .node-num {
+      font-size: 0.85rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .node-stars {
+      display: flex;
+      gap: 0px;
+      font-size: 0.5rem;
+      margin-top: 1px;
+    }
+
+
+
+    @keyframes bobble {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .level-num {
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .level-stars-row {
+      display: flex;
+      gap: 1px;
+      font-size: 0.6rem;
+    }
+
+    .star-filled {
+      color: #ffd700;
+    }
+
+    .star-empty {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes pulseBtn {
+
+      0%,
+      100% {
+        box-shadow: 0 6px 24px rgba(255, 160, 0, 0.6), 0 0 0 3px #ffd700;
+      }
+
+      50% {
+        box-shadow: 0 6px 32px rgba(255, 160, 0, 1), 0 0 0 3px #fff8a0;
+      }
+    }
+
+    /* ===== GAME SCREEN ===== */
+    #game-screen {
+      background: #0a0118;
+    }
+
+    #bg-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 1;
+      transition: background-image 0.4s ease;
+    }
+
+    /* Dark overlay so gems are always readable over any photo */
+    #bg-layer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 1, 20, 0.62);
+    }
+
+    /* HUD */
+    #hud {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      padding: 12px 12px 8px;
+      background: linear-gradient(180deg, rgba(10, 1, 24, 0.95) 0%, rgba(10, 1, 24, 0.6) 100%);
+      z-index: 10;
+    }
+
+    .hud-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: white;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .hud-btn:active {
+      background: rgba(255, 255, 255, 0.18);
+      transform: scale(0.92);
+    }
+
+    .hud-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .hud-row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .level-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffd700;
+      letter-spacing: 1px;
+    }
+
+    .moves-display {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .moves-icon {
+      font-size: 1rem;
+    }
+
+    .moves-val {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: white;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .moves-label {
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .score-row {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .score-val {
+      color: #ffd700;
+      font-weight: 900;
+      font-size: 0.95rem;
+    }
+
+    /* Goals Bar */
+    #goals-bar {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 6px 16px;
+      background: rgba(10, 1, 24, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      flex-wrap: wrap;
+    }
+
+    .goal-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 4px 10px 4px 4px;
+    }
+
+    .goal-chip img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+
+    .goal-text {
+      font-size: 0.95rem;
+      font-weight: 900;
+      color: white;
+    }
+
+    .goal-chip.completed {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    .goal-chip.completed .goal-text {
+      color: #4ade80;
+    }
+
+    /* Canvas Container */
+    #canvas-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+
+    #game-canvas {
+      display: block;
+      touch-action: none;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* ===== MODALS ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(10, 1, 24, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.hidden {
+      display: none !important;
+    }
+
+    .modal-card {
+      background: linear-gradient(145deg, #1a0a3e, #2d1260);
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      border-radius: 28px;
+      padding: 24px 20px;
+      width: 92%;
+      max-width: 380px;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(100, 50, 220, 0.3);
+      animation: modalAppear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      margin: auto;
+    }
+
+    @keyframes modalAppear {
+      from {
+        transform: scale(0.7);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-icon {
+      font-size: 3.5rem;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: #ffd700;
+      margin-bottom: 6px;
+    }
+
+    .modal-sub {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    .stars-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      font-size: 2.4rem;
+      margin-bottom: 16px;
+    }
+
+    .star-anim {
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .star-anim.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .score-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 18px;
+    }
+
+    .score-box .label {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .score-box .value {
+      color: #ffd700;
+      font-size: 1.8rem;
+      font-weight: 900;
+    }
+
+    .modal-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 900;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #0a0118;
+      box-shadow: 0 6px 20px rgba(255, 180, 0, 0.4);
+    }
+
+    .btn-purple {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* ===== TOAST ===== */
+    #toast {
+      position: absolute;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-weight: 800;
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 0.9rem;
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== CANVAS OVERLAY ===== */
+    #combo-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-family: 'Cinzel', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transition: none;
+    }
+
+    #combo-display.burst {
+      animation: comboBurst 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes comboBurst {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+
+      60% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, -60%) scale(0.8);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="game-root">
+    <!-- TUTORIAL OVERLAY -->
+    <div id="tutorial-overlay" class="tutorial-overlay hidden">
+      <div class="tutorial-card">
+        <div class="tutorial-title">HOW TO PLAY</div>
+
+        <!-- Video Tutorial -->
+        <video id="tutorial-video" src="/video/Video-tutorial.mp4" autoplay loop muted playsinline
+          style="width: 100%; max-height: 280px; border-radius: 16px; border: 2px solid #ffd700; box-shadow: 0 8px 24px rgba(0,0,0,0.6); object-fit: contain; background: #000; margin-bottom: 12px;"></video>
+
+        <div class="tutorial-text">Drag a fruit UP or SIDEWAYS<br>to match 3 in a row!</div>
+        <button id="btn-skip-tutorial" class="btn-skip-tutorial">GOT IT! PLAY NOW ▶</button>
+      </div>
+    </div>
+
+    <!-- GLOBAL ECONOMY HUD TOP BAR -->
+    <div id="global-economy-bar">
+      <div class="econ-left-group">
+        <div class="econ-pill" id="hud-lives-box" title="Click for Lives info">
+          <span>❤️</span>
+          <span id="hud-lives-val" class="econ-val">5/5</span>
+          <span id="hud-lives-timer" class="econ-sub">FULL</span>
+        </div>
+        <div class="econ-pill" id="hud-coins-box">
+          <span>💰</span>
+          <span id="hud-coins-val" class="econ-val">100</span>
+        </div>
+        <span id="hud-free-attempts" class="free-attempts-badge" style="display:none;">⚡ 3 FREE</span>
+      </div>
+      <div class="econ-actions">
+        <button id="btn-daily-gift" class="econ-btn" title="Daily Login Reward">🎁</button>
+        <button id="btn-open-shop" class="econ-btn btn-shop-gold" title="Royal Shop">🛒</button>
+      </div>
+    </div>
+
+    <!-- START LANDING SCREEN -->
+    <div id="start-screen" class="screen">
+      <div class="start-screen-content">
+        <div class="start-title-box">
+          <h1 class="start-title">SNR - Royal Fruits</h1>
+          <p class="start-subtitle">✦ MATCH 3 KINGDOM ✦</p>
+        </div>
+        <button id="btn-start-game" class="start-btn-play"
+          onclick="window.onStartGameClick && window.onStartGameClick(event)">
+          <span>▶</span> START GAME
+        </button>
+      </div>
+    </div>
+
+    <!-- MENU SCREEN -->
+    <div id="menu-screen" class="screen">
+      <div class="menu-header">
+        <div class="menu-title">SNR Royal Fruits</div>
+        <div class="menu-subtitle">✦ Match 3 Kingdom ✦</div>
+        <div class="menu-gems-preview" id="menu-gems-preview"></div>
+        <div class="world-nav-bar">
+          <div id="world-title-display" class="world-label">🏰 World 1 — Royal Garden</div>
+          <div id="world-dots" class="world-dots"></div>
+        </div>
+      </div>
+
+      <div class="world-view-container">
+        <div id="world-card" class="world-card">
+          <!-- Next button at TOP of path -->
+          <button id="btn-next-world" class="world-nav-btn nav-top">
+            <span id="next-btn-text">NEXT WORLD →</span>
+          </button>
+
+          <!-- SVG connector line -->
+          <svg id="world-svg-path" class="world-svg-path"></svg>
+
+          <!-- 20 Level Nodes -->
+          <div id="world-nodes-layer" class="world-nodes-layer"></div>
+
+          <!-- Prev button at BOTTOM of path -->
+          <button id="btn-prev-world" class="world-nav-btn nav-bottom">
+            <span>← PREV WORLD</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      #event-banner {
+        position: absolute;
+        top: 25%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        background: linear-gradient(135deg, #ff0055, #8a2be2);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-weight: 900;
+        font-size: 1.5rem;
+        letter-spacing: 2px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.3);
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      #event-banner.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      #survival-timer {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #ff3366;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 900;
+        font-size: 1.2rem;
+        border: 2px solid #ff3366;
+        box-shadow: 0 0 10px #ff3366;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      #survival-timer.hidden {
+        display: none !important;
+      }
+
+      #survival-timer.warning {
+        color: #ff0000;
+        border-color: #ff0000;
+        animation: pulseTimer 0.5s infinite alternate;
+      }
+
+      @keyframes pulseTimer {
+        to {
+          transform: scale(1.1);
+          box-shadow: 0 0 20px #ff0000;
+        }
+      }
+
+      @keyframes floatCup {
+
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-10px) scale(1.06);
+        }
+      }
+
+      @keyframes cupPulse {
+        to {
+          opacity: 0.95;
+        }
+      }
+
+      /* ===== GLOBAL ECONOMY HUD TOP BAR ===== */
+      #global-economy-bar {
+        position: relative;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 6px 12px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        z-index: 1000;
+        pointer-events: auto;
+        background: rgba(5, 1, 18, 0.75);
+        border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+        backdrop-filter: blur(8px);
+      }
+
+      .econ-left-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+      }
+
+      .econ-pill {
+        background: rgba(10, 3, 25, 0.9);
+        border: 1.5px solid rgba(255, 215, 0, 0.4);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        border-radius: 18px;
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.15s, border-color 0.15s;
+        white-space: nowrap;
+      }
+
+      .econ-pill:hover {
+        transform: scale(1.04);
+        border-color: #ffd700;
+      }
+
+      .econ-val {
+        color: #ffd700;
+        font-weight: 900;
+      }
+
+      .econ-sub {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1px 5px;
+        border-radius: 8px;
+      }
+
+      .free-attempts-badge {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
+        font-size: 0.7rem;
+        font-weight: 900;
+        padding: 3px 8px;
+        border-radius: 12px;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        animation: pulseBadge 2s infinite alternate;
+        white-space: nowrap;
+      }
+
+      @keyframes pulseBadge {
+        to {
+          transform: scale(1.05);
+        }
+      }
+
+      .econ-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .econ-btn {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1.5px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .econ-btn:hover {
+        transform: scale(1.1);
+        border-color: #ffd700;
+      }
+
+      .btn-shop-gold {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-color: #ffd700;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+      }
+
+      .pulse-gift {
+        animation: pulseGift 1s infinite alternate;
+      }
+
+      @keyframes pulseGift {
+        to {
+          transform: scale(1.2);
+          box-shadow: 0 0 15px #ec4899;
+        }
+      }
+
+      /* ===== IN-GAME BOOSTERS TRIGGER ===== */
+      .in-game-booster-container {
+        display: flex;
+        justify-content: center;
+        margin: 4px 0;
+        z-index: 10;
+      }
+
+      .btn-booster-trigger {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        border: 1.5px solid #ffd700;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 0.85rem;
+        padding: 6px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+
+      .btn-booster-trigger:hover {
+        transform: scale(1.06);
+        box-shadow: 0 0 16px rgba(255, 215, 0, 0.8);
+      }
+
+      .booster-count-badge {
+        background: #f59e0b;
+        color: #000000;
+        font-size: 0.72rem;
+        font-weight: 900;
+        padding: 2px 7px;
+        border-radius: 10px;
+      }
+
+      /* ===== IN-GAME 10 BONUS ITEMS STRIP ===== */
+      .in-game-bonus-bar {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: rgba(5, 1, 18, 0.6);
+        border-radius: 14px;
+        margin: 4px 10px;
+        overflow-x: auto;
+        z-index: 10;
+      }
+
+      .in-game-bonus-btn {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1.5px solid rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s, border-color 0.15s;
+        padding: 0;
+      }
+
+      .in-game-bonus-btn img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+
+      .in-game-bonus-btn:hover:not(.disabled) {
+        transform: scale(1.12);
+        border-color: #ffd700;
+        box-shadow: 0 0 10px #ffd700;
+      }
+
+      .in-game-bonus-btn.disabled {
+        opacity: 0.4;
+        filter: grayscale(0.8);
+        cursor: not-allowed;
+      }
+
+      .bonus-qty-badge {
+        position: absolute;
+        bottom: -3px;
+        right: -3px;
+        background: #ef4444;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 900;
+        padding: 1px 5px;
+        border-radius: 8px;
+        border: 1px solid white;
+      }
+
+      /* ===== SHOP MODAL ===== */
+      .shop-modal-card {
+        max-width: 420px;
+        width: 95%;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .shop-items-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 320px;
+        overflow-y: auto;
+        padding-right: 4px;
+        margin: 10px 0;
+      }
+
+      .shop-item-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 8px 12px;
+      }
+
+      .shop-item-icon {
+        width: 38px;
+        height: 38px;
+        object-fit: contain;
+      }
+
+      .shop-item-info {
+        flex: 1;
+        text-align: left;
+      }
+
+      .shop-item-title {
+        font-weight: 800;
+        color: #ffd700;
+        font-size: 0.95rem;
+      }
+
+      .shop-qty {
+        font-size: 0.75rem;
+        color: #94a3b8;
+      }
+
+      .shop-item-desc {
+        font-size: 0.78rem;
+        color: #cbd5e1;
+      }
+
+      .btn-buy-item {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: 1px solid #ffffff;
+        color: white;
+        font-weight: 900;
+        padding: 6px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        transition: transform 0.15s;
+      }
+
+      .btn-buy-item:active {
+        transform: scale(0.95);
+      }
+
+      .econ-modal-card {
+        max-width: 360px;
+        width: 90%;
+      }
+
+      .econ-modal-section {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 12px;
+      }
+
+      .econ-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #ffffff;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+      }
+
+      .econ-modal-timer {
+        font-size: 0.8rem;
+        color: #f59e0b;
+      }
+
+      .econ-modal-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+    </style>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="screen hidden">
+      <div id="bg-layer"></div>
+      <div id="event-banner" class="hidden">EVENT!</div>
+      <div id="survival-timer" class="hidden">⏱ 01:00</div>
+      <div id="hud">
+        <button class="hud-btn" id="btn-menu">☰</button>
+        <button class="hud-btn" id="btn-pause" style="margin-left:5px;">⏸</button>
+        <button class="hud-btn btn-shop-gold" id="btn-in-game-shop" style="margin-left:5px;"
+          title="Royal Shop">🛒</button>
+        <div class="hud-center">
+          <div class="hud-row1">
+            <div class="level-badge" id="level-badge">LEVEL 1</div>
+            <!-- Dynamic Star Progress Bar -->
+            <div id="time-bar-container"
+              style="flex: 1; margin: 0 12px; height: 10px; background: rgba(0,0,0,0.45); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 6px; position: relative;">
+              <div id="time-bar"
+                style="width: 100%; height: 100%; background: linear-gradient(90deg, #10b981, #f59e0b); border-radius: 4px; transition: width 0.1s linear;">
+              </div>
+              <span id="star-marker-2"
+                style="position: absolute; left: 25%; top: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; color: #ffd700; text-shadow: 0 0 3px #000; z-index: 2; transition: color 0.2s;">★</span>
+              <span id="star-marker-3"
+                style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 0.65rem; color: #ffd700; text-shadow: 0 0 3px #000; z-index: 2; transition: color 0.2s;">★</span>
+            </div>
+            <div class="moves-display">
+              <div>
+                <div class="moves-label">TIME</div>
+                <div class="moves-val" id="moves-val">60</div>
+              </div>
+            </div>
+          </div>
+          <div class="score-row">Score: <span class="score-val" id="score-val">0</span></div>
+        </div>
+        <button class="hud-btn" id="btn-restart">↺</button>
+      </div>
+      <div id="goals-bar"></div>
+      <!-- IN-GAME 10 BONUS ITEMS BAR -->
+      <!-- IN-GAME BOOSTERS TRIGGER BUTTON (Clean UI replaces crowded 10-item bar!) -->
+      <div class="in-game-booster-container">
+        <button id="btn-open-booster-drawer" class="btn-booster-trigger">
+          ⚡ BOOSTERS <span id="booster-total-count" class="booster-count-badge">10</span>
+        </button>
+      </div>
+      <div id="canvas-wrap">
+        <canvas id="game-canvas"></canvas>
+        <div id="combo-display"></div>
+      </div>
+    </div>
+
+    <!-- IN-GAME BOOSTERS MODAL -->
+    <div id="booster-drawer-modal" class="modal-overlay hidden">
+      <div class="modal-card shop-modal-card">
+        <div class="modal-icon">⚡</div>
+        <div class="modal-title">ROYAL BOOSTERS</div>
+        <p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 12px;">Select a booster gem to use in your level:
+          (Max 1 per attempt)</p>
+
+        <div id="in-game-booster-grid" class="shop-items-grid"></div>
+
+        <div class="modal-actions" style="margin-top: 15px;">
+          <button class="modal-btn btn-ghost modal-close-btn" data-close-modal="booster-drawer-modal">BACK TO
+            GAME</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVES RECOVERY MODAL -->
+    <div id="lives-modal" class="modal-overlay hidden">
+      <div class="modal-card econ-modal-card">
+        <div class="modal-icon">❤️</div>
+        <div class="modal-title">ROYAL LIVES</div>
+
+        <div class="econ-modal-section">
+          <div class="econ-modal-header">
+            <span>❤️ LIVES: <strong id="modal-lives-val">5/5</strong></span>
+            <span class="econ-modal-timer" id="modal-lives-timer">FULL</span>
+          </div>
+          <div class="econ-modal-btns">
+            <button id="btn-ad-life" class="modal-btn btn-gold">🎬 Watch Ad (+1 Life)</button>
+            <button id="btn-buy-life" class="modal-btn btn-purple">💰 Buy (+1 Life for 100)</button>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button class="modal-btn btn-ghost modal-close-btn" data-close-modal="lives-modal">CLOSE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROYAL SHOP MODAL -->
+    <div id="shop-modal" class="modal-overlay hidden">
+      <div class="modal-card shop-modal-card">
+        <div class="modal-icon">🛒</div>
+        <div class="modal-title">ROYAL BONUS SHOP</div>
+        <p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 12px;">Stock up on all 10 power gems! Max 5 of each
+          item.</p>
+
+        <div class="shop-top-row">
+          <button id="btn-shop-ad-coins" class="modal-btn btn-gold" style="padding: 8px 14px; font-size: 0.85rem;">
+            🎬 Watch Ad (+100 💰)
+          </button>
+        </div>
+
+        <div id="shop-items-grid" class="shop-items-grid"></div>
+
+        <div class="modal-actions" style="margin-top: 15px;">
+          <button class="modal-btn btn-ghost modal-close-btn" data-close-modal="shop-modal">CLOSE SHOP</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAILY LOGIN GIFT MODAL -->
+    <div id="daily-modal" class="modal-overlay hidden">
+      <div class="modal-card econ-modal-card">
+        <div class="modal-icon" style="font-size: 3.5rem;">🎁</div>
+        <div class="modal-title">DAILY LOGIN REWARD</div>
+        <p id="daily-status-text" style="color: #cbd5e1; font-size: 0.95rem; margin: 12px 0 20px; line-height: 1.5;">
+        </p>
+        <div class="modal-actions">
+          <button id="btn-claim-daily" class="modal-btn btn-gold" style="width: 100%;">CLAIM DAILY GIFT 🎁</button>
+          <button class="modal-btn btn-ghost modal-close-btn" data-close-modal="daily-modal"
+            style="width: 100%; margin-top: 8px;">CLOSE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VICTORY MODAL -->
+    <div id="victory-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-icon">🏆</div>
+        <div class="modal-title">LEVEL CLEAR!</div>
+        <div class="modal-sub" id="victory-sub">Amazing match!</div>
+        <div class="stars-row" id="stars-row">
+          <span class="star-anim">⭐</span>
+          <span class="star-anim">⭐</span>
+          <span class="star-anim">⭐</span>
+        </div>
+        <div class="score-box">
+          <div class="label">FINAL SCORE</div>
+          <div class="value" id="victory-score">0</div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn btn-gold" id="btn-next-level">NEXT LEVEL →</button>
+          <button class="modal-btn btn-ghost" id="btn-back-menu-win">Select Level</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEFEAT MODAL -->
+    <div id="defeat-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-icon">⏳</div>
+        <div class="modal-title">TIME IS OVER!</div>
+        <div class="modal-sub">Continue anyway?</div>
+        <div class="modal-actions">
+          <button class="modal-btn btn-purple" id="btn-continue-money">💰 CONTINUE (-$50)</button>
+          <button class="modal-btn btn-gold" id="btn-retry">↺ RETRY LEVEL</button>
+          <button class="modal-btn btn-ghost" id="btn-back-menu-lose">Select Level</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSE MODAL -->
+    <div id="pause-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-icon">⏸</div>
+        <div class="modal-title">GAME PAUSED</div>
+        <div class="modal-actions">
+          <button class="modal-btn btn-gold" id="btn-resume">▶ RESUME</button>
+          <button class="modal-btn btn-ghost" id="btn-back-menu-pause">Select Level</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAND CUP CELEBRATION MODAL -->
+    <div id="cup-modal" class="modal-overlay hidden">
+      <div class="modal-card"
+        style="border-color: #ffd700; background: linear-gradient(145deg, #2d0061, #0a0118); overflow: visible; position: relative;">
+        <div
+          style="position: absolute; inset: -15px; border-radius: 32px; background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, rgba(0,0,0,0) 70%); z-index: -1; animation: cupPulse 2s infinite alternate;">
+        </div>
+        <div class="modal-icon" style="font-size: 5rem; animation: floatCup 3s ease-in-out infinite;">🏆</div>
+        <div class="modal-title"
+          style="font-family: 'Cinzel', serif; font-size: 2.2rem; text-shadow: 0 0 10px rgba(255,215,0,0.5);">GRAND
+          CHAMPION</div>
+        <div class="modal-sub" style="color: #4ade80; font-weight: bold; font-size: 1.1rem; letter-spacing: 1px;">FINAL
+          CUP CLAIMED!</div>
+        <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; line-height: 1.6; margin: 15px 0 25px;">
+          Congratulations! You completed all 100 levels of Royal Gems Deluxe, masterfully clearing every section and
+          claiming the Ultimate Gold Cup!
+        </p>
+        <div class="modal-actions">
+          <button class="modal-btn btn-gold" id="btn-cup-close" style="width: 100%;">GRAND SELECT</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast">🎉 Well done!</div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

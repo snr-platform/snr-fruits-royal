@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SNR Royal Fruits</string>
+    <string name="title_activity_main">SNR Royal Fruits</string>
+    <string name="package_name">com.puzzlegame.master</string>
+    <string name="custom_url_scheme">com.puzzlegame.master</string>
+</resources>

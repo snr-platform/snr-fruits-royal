@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Node Placement Tool — Royal Gems</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Fira+Code:wght@500&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0d0914;
+            color: #e2e8f0;
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar controls */
+        .sidebar {
+            width: 420px;
+            background: #161024;
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+        }
+
+        select,
+        button,
+        textarea {
+            font-family: inherit;
+            border-radius: 8px;
+            border: 1.5px solid rgba(255, 215, 0, 0.3);
+            background: #231938;
+            color: white;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus,
+        textarea:focus {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 900;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.btn-success {
+            background: linear-gradient(135deg, #10b981, #047857);
+        }
+
+        button.btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        button.btn-danger {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+        textarea {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            height: 260px;
+            resize: none;
+            white-space: pre;
+        }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            background: #090510;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: auto;
+            position: relative;
+        }
+
+        .map-frame {
+            position: relative;
+            height: calc(100vh - 40px);
+            aspect-ratio: 1080 / 1920;
+            border: 3px solid rgba(255, 215, 0, 0.5);
+            border-radius: 20px;
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            cursor: crosshair;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* Node Marker */
+        .node-marker {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #ffe066, #ff9900);
+            border: 2px solid #ffffff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 215, 0, 0.8);
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #200a00;
+            font-weight: 900;
+            font-size: 0.75rem;
+            pointer-events: none;
+            animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Path SVG overlay */
+        .path-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 900;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h1>🗺️ Node Placement Tool</h1>
+        <p style="font-size:0.8rem; color:#94a3b8;">Click directly on the map path to place sequential level nodes (1,
+            2, 3...).</p>
+
+        <div class="control-group">
+            <label for="world-select">Select World Background</label>
+            <select id="world-select">
+                <option value="/icons/sections/World-1.JPG">World 1 — Royal Garden</option>
+                <option value="/icons/sections/World-2.JPG">World 2 — Crystal Caves</option>
+                <option value="/icons/sections/World-3.JPG">World 3 — Fire Peaks</option>
+                <option value="/icons/sections/World-4.JPG">World 4 — Ocean Depths</option>
+                <option value="/icons/sections/World-5.JPG">World 5 — Crown Palace</option>
+            </select>
+        </div>
+
+        <div class="btn-row">
+            <button id="btn-undo" class="btn-warning">↩️ Undo</button>
+            <button id="btn-clear" class="btn-danger">🗑️ Clear All</button>
+        </div>
+
+        <div class="control-group">
+            <label for="code-output">Generated TypeScript Code</label>
+            <textarea id="code-output" readonly></textarea>
+        </div>
+
+        <button id="btn-copy" class="btn-success">📋 Copy to Clipboard</button>
+    </div>
+
+    <div class="workspace">
+        <div id="map-frame" class="map-frame">
+            <svg id="path-svg" class="path-svg"></svg>
+            <div id="markers-layer"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Copied to Clipboard!</div>
+
+    <script>
+        const worldSelect = document.getElementById('world-select');
+        const mapFrame = document.getElementById('map-frame');
+        const markersLayer = document.getElementById('markers-layer');
+        const pathSvg = document.getElementById('path-svg');
+        const codeOutput = document.getElementById('code-output');
+        const btnUndo = document.getElementById('btn-undo');
+        const btnClear = document.getElementById('btn-clear');
+        const btnCopy = document.getElementById('btn-copy');
+        const toastEl = document.getElementById('toast');
+
+        let points = [];
+
+        function updateMapBackground() {
+            mapFrame.style.backgroundImage = `url('${worldSelect.value}')`;
+        }
+
+        worldSelect.onchange = () => {
+            updateMapBackground();
+            updateOutput();
+        };
+
+        mapFrame.onclick = (e) => {
+            const rect = mapFrame.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            const x = Math.round((clickX / rect.width) * 100);
+            const y = Math.round((clickY / rect.height) * 100);
+
+            points.push({ x, y });
+            render();
+        };
+
+        btnUndo.onclick = () => {
+            points.pop();
+            render();
+        };
+
+        btnClear.onclick = () => {
+            if (confirm('Clear all placed nodes?')) {
+                points = [];
+                render();
+            }
+        };
+
+        btnCopy.onclick = () => {
+            navigator.clipboard.writeText(codeOutput.value).then(() => {
+                toastEl.classList.add('show');
+                setTimeout(() => toastEl.classList.remove('show'), 2000);
+            });
+        };
+
+        function render() {
+            // 1. Render Markers
+            markersLayer.innerHTML = '';
+            points.forEach((p, idx) => {
+                const marker = document.createElement('div');
+                marker.className = 'node-marker';
+                marker.style.left = `${p.x}%`;
+                marker.style.top = `${p.y}%`;
+                marker.textContent = idx + 1;
+                markersLayer.appendChild(marker);
+            });
+
+            // 2. Render SVG Path
+            const rect = mapFrame.getBoundingClientRect();
+            if (points.length > 1) {
+                let d = `M ${(points[0].x / 100) * rect.width} ${(points[0].y / 100) * rect.height}`;
+                for (let i = 1; i < points.length; i++) {
+                    const prevX = (points[i - 1].x / 100) * rect.width;
+                    const prevY = (points[i - 1].y / 100) * rect.height;
+                    const currX = (points[i].x / 100) * rect.width;
+                    const currY = (points[i].y / 100) * rect.height;
+                    const midY = (prevY + currY) / 2;
+                    d += ` C ${prevX} ${midY}, ${currX} ${midY}, ${currX} ${currY}`;
+                }
+                pathSvg.innerHTML = `<path d="${d}" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="6 4"/>`;
+            } else {
+                pathSvg.innerHTML = '';
+            }
+
+            // 3. Update Code Output
+            updateOutput();
+        }
+
+        function updateOutput() {
+            const selectedIndex = worldSelect.selectedIndex + 1;
+            const constName = `WORLD${selectedIndex}_NODE_COORDS`;
+            let code = `const ${constName}: { x: number; y: number }[] = [\n`;
+            points.forEach((p, idx) => {
+                const startLevel = (selectedIndex - 1) * 20 + 1;
+                code += `    { x: ${p.x}, y: ${p.y} }, // Level ${startLevel + idx}\n`;
+            });
+            code += `];`;
+            codeOutput.value = code;
+        }
+
+        // Initialize
+        updateMapBackground();
+        render();
+    </script>
+</body>
+
+</html>
