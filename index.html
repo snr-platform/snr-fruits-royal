@@ -7,7 +7,7 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>SNR Royal Fruits</title>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9010633656184987"
-         crossorigin="anonymous"></script>
+    crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Cinzel:wght@700;900&display=swap"
@@ -430,6 +430,8 @@
       background:
         radial-gradient(ellipse at 50% 0%, #1a3a0f 0%, #0d2008 40%, #060d04 100%);
       overflow: hidden;
+      padding-top: 48px;
+      /* space for fixed economy HUD bar */
     }
 
     #menu-screen::before {
@@ -446,7 +448,7 @@
     .menu-header {
       position: relative;
       text-align: center;
-      padding: 28px 20px 14px;
+      padding: 12px 20px 14px;
       flex-shrink: 0;
       z-index: 2;
     }
@@ -1313,21 +1315,24 @@
 
       /* ===== GLOBAL ECONOMY HUD TOP BAR ===== */
       #global-economy-bar {
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
         width: 100%;
         max-width: 480px;
-        margin: 0 auto;
         padding: 6px 12px;
         box-sizing: border-box;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 6px;
-        z-index: 1000;
+        z-index: 2000;
         pointer-events: auto;
-        background: rgba(5, 1, 18, 0.75);
-        border-bottom: 1px solid rgba(255, 215, 0, 0.25);
-        backdrop-filter: blur(8px);
+        background: rgba(5, 1, 18, 0.90);
+        border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
       }
 
       .econ-left-group {

@@ -325,6 +325,22 @@ function createShapeMask(shape: string, rows: number, cols: number): number[][] 
                     if (r === 0 && (c === 0 || c === cols - 1)) mask[r][c] = 0;
                     if (r > rows / 2 && Math.abs(c - cc) > (rows - r)) mask[r][c] = 0;
                     break;
+                case 'cross':
+                    if (Math.abs(r - cr) > 1 && Math.abs(c - cc) > 1) mask[r][c] = 0;
+                    break;
+                case 'hourglass':
+                    if (Math.abs(c - cc) > Math.max(1, (rows - 1 - Math.abs(r - cr) * 2) / 2)) mask[r][c] = 0;
+                    break;
+                case 'ring':
+                    if (Math.abs(nr) < 0.38 && Math.abs(nc) < 0.38) mask[r][c] = 0;
+                    break;
+                case 'arch':
+                    if (r < Math.floor(rows * 0.42) && Math.abs(c - cc) > Math.max(1, (r + 1) * 0.55)) mask[r][c] = 0;
+                    if (r >= Math.floor(rows * 0.42) && (c === 0 || c === cols - 1)) mask[r][c] = 0;
+                    break;
+                case 'bowtie':
+                    if (Math.abs(c - cc) > Math.max(1, (rows - Math.abs(r - cr) * 2) / 2)) mask[r][c] = 0;
+                    break;
                 case 'square':
                 case 'rectangle':
                 default:
@@ -356,7 +372,13 @@ function buildLevels(): LevelDef[] {
         const easy = diff < 7;
         const med = diff < 14;
 
-        const shapeConfig = LEVEL_SHAPES[i] ?? { shape: 'square', rows: 7, cols: 7 };
+        const baseShape = LEVEL_SHAPES[i] ?? { shape: 'square', rows: 7, cols: 7 };
+        // Every fifth stage gets a memorable silhouette, with the regular stages
+        // retaining their hand-authored shapes and board sizes.
+        const milestoneShapes = ['cross', 'hourglass', 'ring', 'arch', 'bowtie'];
+        const shapeConfig = i % 5 === 0
+            ? { ...baseShape, shape: milestoneShapes[(Math.floor(i / 5) - 1) % milestoneShapes.length] }
+            : baseShape;
         const rows = shapeConfig.rows;
         const cols = shapeConfig.cols;
         const moves = Math.max(10, 32 - Math.floor(diff * 1.1));
@@ -374,7 +396,7 @@ function buildLevels(): LevelDef[] {
 
         // Goals
         const goalGems = gemPool.slice(0, easy ? 2 : med ? 3 : 4);
-        const goalAmt = easy ? 12 + diff * 2 : med ? 18 + diff : 25 + diff;
+        const goalAmt = (easy ? 12 + diff * 2 : med ? 18 + diff : 25 + diff) + world * 3;
         const goals: Goal[] = goalGems.map(g => ({ type: 'gem', gem: g, required: goalAmt, collected: 0 }));
 
         // Obstacles
@@ -386,13 +408,17 @@ function buildLevels(): LevelDef[] {
         const stoneCount = i >= 50 ? 2 + Math.floor((i - 50) / 3) : 0;
         const iceCount = i >= 10 ? (easy ? 1 : med ? 2 : 3 + diff - 14) : 0;
         const chainCount = i >= 30 ? (med ? 1 : 2) : 0;
-        const marbleCount = world >= 1 && diff >= 10 ? 2 + Math.floor(diff / 4) : 0;
+        const marbleCount = world >= 1 && diff >= 10
+            ? 2 + Math.floor(diff / 4)
+            : world === 0 && i >= 4
+                ? 1 + Math.floor((diff - 3) / 5)
+                : 0;
 
-        // Optionally add obstacle goals (only require what we place)
-        if (iceCount > 0 && Math.random() > 0.4) goals.push({ type: 'ice', required: iceCount, collected: 0 });
-        if (stoneCount > 0 && Math.random() > 0.4) goals.push({ type: 'stone', required: stoneCount, collected: 0 });
-        if (chainCount > 0 && Math.random() > 0.4) goals.push({ type: 'chain', required: chainCount, collected: 0 });
-        if (marbleCount > 0 && Math.random() > 0.4) goals.push({ type: 'marble', required: marbleCount, collected: 0 });
+        // Goals must stay identical across launches so levels can be balanced.
+        if (iceCount > 0) goals.push({ type: 'ice', required: iceCount, collected: 0 });
+        if (stoneCount > 0) goals.push({ type: 'stone', required: stoneCount, collected: 0 });
+        if (chainCount > 0) goals.push({ type: 'chain', required: chainCount, collected: 0 });
+        if (marbleCount > 0) goals.push({ type: 'marble', required: marbleCount, collected: 0 });
 
 
         if (world === 2 && diff > 10) {
@@ -420,7 +446,7 @@ function buildLevels(): LevelDef[] {
         // ── World 1 (levels 1–20): Full-grid marble mechanic ──────────────
         // No gem goals. Every cell is covered by a marble stone (hp=1).
         // Win condition: break ALL marbles by matching gems on top of them.
-        if (world === 0) {
+        if (world === 0 && i <= 3) {
             goals.length = 0; // clear gem goals
             let activeCells = 0;
             for (let r = 0; r < rows; r++) {
@@ -438,6 +464,14 @@ function buildLevels(): LevelDef[] {
             place(iceCount, 'ice', 2);
             place(chainCount, 'chain', 2);
             place(marbleCount, 'marble', 3);
+        }
+
+        // Every tenth level adds a clear score target for a satisfying boss-stage finish.
+        if (i % 10 === 0 && !(world === 0 && i <= 3)) {
+            const nonGemGoals = goals.filter(goal => goal.type !== 'gem');
+            goals.length = 0;
+            goals.push(...nonGemGoals);
+            goals.push({ type: 'score', required: 1200 + world * 250, collected: 0 });
         }
 
         // Assign a deterministic background color per level (seeded so same level = same bg)
@@ -1681,7 +1715,11 @@ class GameState {
 
         // Sync score goal first (before either done-check)
         const scoreGoal = this.goals.find(g => g.type === 'score');
-        if (scoreGoal) scoreGoal.collected = this.score;
+        if (scoreGoal) {
+            scoreGoal.collected = this.score;
+            const worldIdx = Math.floor((this.currentLevel.id - 1) / 20) + 1;
+            updateGoalsUI(this.goals, GEM_IMAGES, worldIdx);
+        }
 
         // Check all goals
         const done = this.goals.every(g => g.collected >= g.required);
