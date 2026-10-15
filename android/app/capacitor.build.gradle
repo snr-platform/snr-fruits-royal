@@ -7,14 +7,12 @@ android {
   }
 }
 
-File cordovaVariables = new File("$projectDir/../capacitor-cordova-android-plugins/cordova.variables.gradle")
-if (cordovaVariables.exists()) {
-    apply from: cordovaVariables
-}
-
+apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
     implementation project(':capacitor-community-admob')
+
 }
+
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()
