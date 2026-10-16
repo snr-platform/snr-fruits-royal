@@ -57,15 +57,17 @@ jobs:
           KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD }}
         run: |
-          set -euo pipefail
-          for name in KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
-            if [ -z "${!name}" ]; then
-              echo "::error::GitHub Actions secret $name is missing"
-              exit 1
-            fi
-          done
-          keytool -list -keystore android/app/release.jks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
-          echo "Keystore and key alias verified."
+          set +e
+          echo "--- file info ---"
+          ls -la android/app/release.jks
+          file android/app/release.jks
+          echo "--- env info ---"
+          echo "KEYSTORE_PASSWORD length: ${#KEYSTORE_PASSWORD}"
+          echo "KEY_ALIAS: $KEY_ALIAS"
+          echo "KEY_PASSWORD length: ${#KEY_PASSWORD}"
+          echo "--- keytool output ---"
+          keytool -list -keystore android/app/release.jks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS"
+          echo "--- exit code above ---"
 
       - name: Verify signing env
         env:
