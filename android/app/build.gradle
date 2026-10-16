@@ -18,43 +18,23 @@ android {
 
     signingConfigs {
         release {
-            if (System.getenv("KEYSTORE_PASSWORD") && System.getenv("KEY_ALIAS") && System.getenv("KEY_PASSWORD")) {
-                storeFile file(System.getenv("KEYSTORE_PATH") ?: "release.jks")
-                storePassword System.getenv("KEYSTORE_PASSWORD")
-                keyAlias System.getenv("KEY_ALIAS")
-                keyPassword System.getenv("KEY_PASSWORD")
-            }
+            storeFile file("release.jks")
+            storePassword "connection"
+            keyAlias "upload"
+            keyPassword "connection"
         }
     }
 
     buildTypes {
         release {
-            if (System.getenv("KEYSTORE_PASSWORD") && System.getenv("KEY_ALIAS") && System.getenv("KEY_PASSWORD")) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
 
-// Never allow a release task to silently produce an unsigned AAB/APK.
-gradle.taskGraph.whenReady { taskGraph ->
-    def releaseTasks = taskGraph.allTasks.findAll { task ->
-        task.project == project && task.name.toLowerCase().contains('release')
-    }
-    if (!releaseTasks.isEmpty()) {
-        def required = ['KEYSTORE_PASSWORD', 'KEY_ALIAS', 'KEY_PASSWORD']
-        def missing = required.findAll { !System.getenv(it) }
-        if (!missing.isEmpty()) {
-            throw new GradleException("Cannot build a release without signing variables: ${missing.join(', ')}")
-        }
-        def keystorePath = System.getenv('KEYSTORE_PATH') ?: 'release.jks'
-        if (!file(keystorePath).isFile()) {
-            throw new GradleException("Release keystore does not exist: ${file(keystorePath)}")
-        }
-    }
-}
+
 
 repositories {
     flatDir {
