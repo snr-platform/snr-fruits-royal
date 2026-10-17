@@ -4,4 +4,5 @@
     <string name="title_activity_main">SNR Royal Fruits</string>
     <string name="package_name">com.puzzlegame.master</string>
     <string name="custom_url_scheme">com.puzzlegame.master</string>
+    <string name="admob_app_id">ca-app-pub-9010633656184987~4625986112</string>
 </resources>
